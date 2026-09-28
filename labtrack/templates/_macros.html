@@ -1,0 +1,19 @@
+{% macro csrf() %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endmacro %}
+
+{% macro field(name, label, errors, value='', type='text', autocomplete='', placeholder='', required=true) %}
+<div class="field{% if errors.get(name) %} has-err{% endif %}">
+  <label for="f-{{ name }}">{{ label }}</label>
+  <input type="{{ type }}" id="f-{{ name }}" name="{{ name }}" value="{{ value }}"{% if autocomplete %} autocomplete="{{ autocomplete }}"{% endif %}{% if placeholder %} placeholder="{{ placeholder }}"{% endif %}{% if required %} required{% endif %}{% if errors.get(name) %} aria-invalid="true" aria-describedby="e-{{ name }}"{% endif %}>
+  {% if errors.get(name) %}<div class="err" id="e-{{ name }}">{{ errors[name] }}</div>{% endif %}
+</div>
+{% endmacro %}
+
+{% macro event(r, with_device=false) -%}
+  {%- if with_device %}<a href="{{ url_for('lab.device', code=r.device_code) }}" class="nm">{{ r.device_name }}</a> · {% endif -%}
+  {%- if r.kind == 'ok' -%}<span class="pill ok">Всё работает</span>
+  {%- elif r.kind == 'service' -%}<span class="pill svc">Обслуживание</span> {{ r.comment }}
+  {%- else -%}<span class="pill {{ 'svc' if r.resolved else 'problem' }}">{{ 'Устранено' if r.resolved else 'Проблема' }}</span> {{ r.category_list or '' }}{% if r.comment %} — «{{ r.comment }}»{% endif %}
+  {%- endif -%}
+{%- endmacro %}
+
+{% macro who(r) -%}{{ r.reporter_name }}{% if r.reporter_group %}, {{ r.reporter_group }}{% endif %}{%- endmacro %}

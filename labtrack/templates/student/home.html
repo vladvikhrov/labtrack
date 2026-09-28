@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% from "_macros.html" import event with context %}
+{% block title %}Мои сообщения{% endblock %}
+{% block content %}
+<div class="student" style="max-width:640px">
+  <section class="panel">
+    <h1 style="font-size:22px;margin-bottom:6px">Здравствуйте, {{ current_user.full_name.split()[0] if current_user.full_name else '' }}!</h1>
+    <p class="muted" style="margin:0">Чтобы сообщить о состоянии устройства, отсканируйте QR-код на его наклейке камерой телефона.</p>
+  </section>
+  <section class="panel">
+    <div class="panel-head"><h2>Мои сообщения</h2><span class="sub">последние 30</span></div>
+    {% if reports %}
+    <ul class="feed">
+      {% for r in reports %}
+      <li><time datetime="{{ r.created_at }}">{{ r.created_at|dt }}</time><span><b>{{ r.device_name }}</b> · {{ event(r) }}</span></li>
+      {% endfor %}
+    </ul>
+    {% else %}<p class="empty">Вы ещё ничего не отправляли.</p>{% endif %}
+  </section>
+</div>
+{% endblock %}

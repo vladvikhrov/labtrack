@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf with context %}
+{% block title %}{{ dev.name }}{% endblock %}
+{% block content %}
+<div class="student">
+  <div class="phone">
+    <div class="tag">LABTRACK · АУД. {{ room_number }} · {{ dev.inventory_no }}</div>
+    <h1>{{ dev.name }}</h1>
+    <div class="state-line">
+      <span class="pill {{ status }}">{{ STATUS_LABELS[status] }}</span>
+      <span class="muted">{% if open_count %}уже {{ open_count }} {{ open_count|plural('сообщение,сообщения,сообщений') }} о проблеме{% else %}{{ dev.place }}{% endif %}</span>
+    </div>
+
+    {% if step == 'choose' %}
+    <div class="big">
+      <form method="post">{{ csrf() }}<input type="hidden" name="action" value="ok"><button class="yes" type="submit"><span class="dot">✓</span>Всё работает</button></form>
+      <a class="no" href="{{ url_for('student.device', code=dev.code, step='problem') }}"><span class="dot">!</span>Есть проблема</a>
+    </div>
+
+    {% elif step == 'problem' %}
+    <form method="post" class="form" novalidate>
+      {{ csrf() }}<input type="hidden" name="action" value="problem">
+      <fieldset style="border:0;padding:0;margin:0">
+        <legend class="lbl">Что не так? Можно выбрать несколько</legend>
+        <div class="chips">
+          {% for c in cats %}
+          <label class="chip{% if c.code == 'other' and loop.length is odd %} wide{% endif %}"><input type="checkbox" name="categories" value="{{ c.code }}" {% if c.code in form.categories %}checked{% endif %}>{{ c.title }}</label>
+          {% endfor %}
+        </div>
+        {% if errors.categories %}<div class="err" role="alert">{{ errors.categories }}</div>{% endif %}
+      </fieldset>
+      <div class="field"><label for="f-comment">Подробнее (необязательно)</label><textarea id="f-comment" name="comment" maxlength="300" placeholder="Например: не работает левая кнопка">{{ form.comment }}</textarea></div>
+      <p class="sub" style="margin:0">Сообщение отправится от имени: {{ current_user.full_name }}{% if current_user.study_group %}, {{ current_user.study_group }}{% endif %}</p>
+      <button class="btn primary" type="submit" style="padding:14px;font-size:16px">Отправить лаборанту</button>
+      <a class="btn" href="{{ url_for('student.device', code=dev.code) }}">Назад</a>
+    </form>
+
+    {% else %}
+    <div class="done">
+      <div class="ring{% if step == 'sent-problem' %} sent{% endif %}">✓</div>
+      <h2>{{ 'Лаборант получил сообщение' if step == 'sent-problem' else 'Спасибо за проверку' }}</h2>
+      <p class="muted">{{ 'Проблема появилась на дашборде лаборанта. Если можете — пересядьте за другой ПК.' if step == 'sent-problem' else 'Отметка сохранена. Хорошего занятия!' }}</p>
+      <a class="btn" href="{{ url_for('student.home') }}">Мои сообщения</a>
+    </div>
+    {% endif %}
+  </div>
+  <p class="note">Отметка занимает 5 секунд и помогает лаборанту чинить технику быстрее.</p>
+</div>
+{% endblock %}

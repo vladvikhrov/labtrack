@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="error-page panel">
+  <div class="code">Ошибка {{ code }}</div>
+  <h1 style="margin:6px 0 10px">{{ title }}</h1>
+  {% if message %}<p class="muted">{{ message }}</p>{% endif %}
+  <p><a class="btn" href="{{ url_for('index') }}">На главную</a></p>
+</div>
+{% endblock %}

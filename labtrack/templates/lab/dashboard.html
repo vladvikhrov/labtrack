@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% from "_macros.html" import event, who with context %}
+{% block title %}Дашборд{% endblock %}
+{% macro tile(d) -%}
+<a class="dev s-{{ d.status }}" href="{{ url_for('lab.device', code=d.code) }}" title="{{ d.name }}: {{ STATUS_LABELS[d.status] }}">
+  <span class="id">{{ d.name }}</span>
+  <span class="meta">{% if d.open_count %}{{ d.categories[0][0] if d.categories else 'жалоба' }}{% elif d.type == 'pc' %}Исправно{% else %}{{ TYPE_LABELS[d.type] }}{% endif %}</span>
+  {% if d.open_count %}<span class="cnt">{{ d.open_count }}</span>{% endif %}
+</a>
+{%- endmacro %}
+{% block content %}
+<div id="live">
+<section class="kpis">
+  <div class="kpi good"><b>{{ total - bad }}<small> / {{ total }}</small></b><span>устройств исправно</span></div>
+  <div class="kpi {{ 'bad' if bad }}"><b>{{ bad }}</b><span>{{ bad|plural('устройство,устройства,устройств') }} с жалобами</span></div>
+  <div class="kpi {{ 'bad' if open_total }}"><b>{{ open_total }}</b><span>открытых {{ open_total|plural('жалоба,жалобы,жалоб') }}</span></div>
+  <div class="kpi"><b>{{ week }}</b><span>сообщений за 7 дней</span></div>
+</section>
+<div class="grid-2">
+  <section class="panel">
+    <div class="panel-head"><h2>Карта класса</h2><span class="sub">Нажмите на устройство, чтобы открыть историю</span></div>
+    <div class="room"><div class="room-inner">
+      <div class="front"><div class="board">Доска · преподаватель</div><div class="periph">{% for d in others %}{{ tile(d) }}{% endfor %}</div></div>
+      <div class="pcs">{% for d in pcs %}{{ tile(d) }}{% endfor %}</div>
+    </div></div>
+    <div class="legend"><span><i style="background:var(--ok)"></i>исправно</span><span><i style="background:var(--warn)"></i>1–2 жалобы</span><span><i style="background:var(--crit)"></i>3 и более — нужен ремонт</span></div>
+  </section>
+  <div class="stack">
+    <section class="panel">
+      <div class="panel-head"><h2>Требуют внимания</h2><span class="sub tnum">{{ attention|length }}</span></div>
+      {% if attention %}
+      <ul class="attn">
+        {% for d in attention %}
+        <li><a href="{{ url_for('lab.device', code=d.code) }}">
+          <span class="pill {{ d.status }}">{{ d.open_count }}</span>
+          <span><span class="nm">{{ d.name }}</span> <span class="sub">— {{ d.open_count }} {{ d.open_count|plural('жалоба,жалобы,жалоб') }}: {% for t, n in d.categories %}{{ t|lower }} ×{{ n }}{{ ', ' if not loop.last }}{% endfor %}</span></span>
+          <span class="sub">{{ d.last_problem_at|ago }}</span>
+        </a></li>
+        {% endfor %}
+      </ul>
+      {% else %}<p class="empty">Жалоб нет — всё оборудование исправно.</p>{% endif %}
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h2>Открытые жалобы по типу</h2></div>
+      {% if by_cat %}
+      <div class="bars">{% for r in by_cat %}<div class="bar"><span>{{ r.title }}</span><span class="track"><span class="fill" style="width:{{ [6, (r.n / by_cat_max * 100)|round|int]|max }}%"></span></span><b>{{ r.n }}</b></div>{% endfor %}</div>
+      {% else %}<p class="empty">Нет открытых жалоб.</p>{% endif %}
+    </section>
+  </div>
+</div>
+<section class="panel" style="margin-top:18px">
+  <div class="panel-head"><h2>Журнал сообщений</h2><span class="sub">последние 12 · обновляется каждые 30 секунд</span></div>
+  {% if feed %}
+  <ul class="feed">
+    {% for r in feed %}
+    <li><time datetime="{{ r.created_at }}">{{ r.created_at|dt }}</time><span>{{ event(r, true) }}{% if r.kind != 'service' %} <span class="sub">· {{ who(r) }}</span>{% endif %}</span></li>
+    {% endfor %}
+  </ul>
+  {% else %}<p class="empty">Сообщений пока нет.</p>{% endif %}
+</section>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+// Живое обновление дашборда без перезагрузки страницы
+(function () {
+  const live = document.getElementById("live");
+  async function refresh() {
+    if (document.hidden) return;
+    try {
+      const res = await fetch(location.href, { credentials: "same-origin", headers: { "X-Requested-With": "fetch" } });
+      if (!res.ok || res.redirected) return;
+      const doc = new DOMParser().parseFromString(await res.text(), "text/html");
+      const fresh = doc.getElementById("live");
+      if (fresh) live.innerHTML = fresh.innerHTML;
+    } catch (e) { /* сеть недоступна — попробуем позже */ }
+  }
+  setInterval(refresh, 30000);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) refresh(); });
+})();
+</script>
+{% endblock %}

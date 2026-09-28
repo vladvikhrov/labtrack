@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf with context %}
+{% block title %}Пользователи{% endblock %}
+{% block content %}
+{% if temp %}
+<div class="temp" role="status">Временный пароль для <b class="mono">{{ temp[0] }}</b>: <code>{{ temp[1] }}</code><br><span class="sub">Передайте его пользователю — он показывается один раз. Пользователь сможет сменить его через своё имя в шапке.</span></div>
+{% endif %}
+<section class="panel">
+  <div class="panel-head"><h2>Добавить пользователя</h2><span class="sub">{% if registration_open %}Студенты также могут зарегистрироваться сами по коду регистрации{% else %}Самостоятельная регистрация выключена{% endif %}</span></div>
+  <form method="post" class="row-form">
+    {{ csrf() }}<input type="hidden" name="action" value="create">
+    <div class="field"><label for="f-fn">ФИО</label><input id="f-fn" name="full_name" required placeholder="Иванов Пётр"></div>
+    <div class="field"><label for="f-gr">Группа</label><input id="f-gr" name="study_group" placeholder="ИС-21"></div>
+    <div class="field"><label for="f-un">Логин</label><input id="f-un" name="username" required placeholder="ivanov.p" autocapitalize="none"></div>
+    <div class="field"><label for="f-role">Роль</label><select id="f-role" name="role"><option value="student">Студент</option><option value="lab">Лаборант</option></select></div>
+    <button class="btn primary" type="submit">Создать</button>
+  </form>
+</section>
+<section class="panel">
+  <div class="panel-head"><h2>Все пользователи</h2><span class="sub">{{ users|length }}</span></div>
+  <div class="table-scroll"><table class="tbl">
+    <thead><tr><th>ФИО</th><th>Группа</th><th>Логин</th><th>Роль</th><th>Сообщений</th><th>Последний вход</th><th></th></tr></thead>
+    <tbody>
+    {% for u in users %}
+      <tr class="{{ 'dim' if not u.is_active }}">
+        <td>{{ u.full_name }}{% if not u.is_active %} <span class="pill off">заблокирован</span>{% endif %}</td>
+        <td>{{ u.study_group or '—' }}</td>
+        <td class="mono">{{ u.username }}</td>
+        <td>{{ 'Лаборант' if u.role == 'lab' else 'Студент' }}</td>
+        <td class="tnum">{{ u.n_reports }}</td>
+        <td class="tnum">{{ u.last_login_at|dt }}</td>
+        <td>{% if u.id != current_user.id %}<div class="actions">
+          <form method="post">{{ csrf() }}<input type="hidden" name="user_id" value="{{ u.id }}"><button class="btn small" name="action" value="reset">Новый пароль</button></form>
+          <form method="post">{{ csrf() }}<input type="hidden" name="user_id" value="{{ u.id }}">{% if u.is_active %}<button class="btn small danger" name="action" value="block">Заблокировать</button>{% else %}<button class="btn small" name="action" value="unblock">Разблокировать</button>{% endif %}</form>
+        </div>{% else %}<span class="sub">это вы</span>{% endif %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</section>
+{% endblock %}

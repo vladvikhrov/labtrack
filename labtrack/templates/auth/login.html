@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf with context %}
+{% block title %}Вход{% endblock %}
+{% block content %}
+<div class="auth">
+  <h1>Вход в LabTrack</h1>
+  <p class="muted" style="margin:0 0 16px">{% if next and next.startswith('/d/') %}Войдите, чтобы отметить состояние устройства. Вход запоминается на 30 дней.{% else %}Учёт оборудования компьютерного класса.{% endif %}</p>
+  <div class="panel">
+    <form method="post" class="form" novalidate>
+      {{ csrf() }}
+      {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+      {% if error %}<div class="err" role="alert">{{ error }}</div>{% endif %}
+      <div class="field"><label for="f-username">Логин</label><input id="f-username" name="username" value="{{ username }}" autocomplete="username" autocapitalize="none" required autofocus></div>
+      <div class="field"><label for="f-password">Пароль</label><input id="f-password" name="password" type="password" autocomplete="current-password" required></div>
+      <button class="btn primary" type="submit" style="padding:12px">Войти</button>
+    </form>
+  </div>
+  <p class="auth-foot">
+    {% if signup_open %}Нет учётной записи? <a href="{{ url_for('auth.register', next=next) }}">Зарегистрироваться</a><br>{% endif %}
+    Забыли пароль? Обратитесь к лаборанту.
+  </p>
+</div>
+{% endblock %}

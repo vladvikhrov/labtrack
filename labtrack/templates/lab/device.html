@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf, event, who with context %}
+{% block title %}{{ dev.name }}{% endblock %}
+{% block content %}
+<a class="back" href="{{ url_for('lab.dashboard') }}">← К дашборду</a>
+<div class="dhead">
+  <div>
+    <div class="tag">{{ TYPE_LABELS[dev.type]|upper }} · {{ dev.inventory_no }} · #{{ dev.code }}</div>
+    <h1>{{ dev.name }}</h1>
+    <div style="margin-top:6px"><span class="pill {{ status }}">{{ STATUS_LABELS[status] }}</span>{% if not dev.is_active %} <span class="pill off">Списано</span>{% endif %}</div>
+  </div>
+  <dl class="facts">
+    <dt>Место</dt><dd>{{ dev.place or '—' }}</dd>
+    <dt>Открытых жалоб</dt><dd class="tnum">{{ open_count }}</dd>
+    <dt>Последнее «всё работает»</dt><dd>{{ last.ok|ago }}</dd>
+    <dt>Последнее обслуживание</dt><dd>{{ last.service|dt }}</dd>
+  </dl>
+</div>
+<div class="grid-2">
+  <section class="panel">
+    <div class="panel-head"><h2>История устройства</h2><span class="sub">{{ history|length }} {{ history|length|plural('запись,записи,записей') }}</span></div>
+    {% if history %}
+    <div class="table-scroll"><table class="tbl">
+      <thead><tr><th>Когда</th><th>Событие</th><th>Кто</th></tr></thead>
+      <tbody>
+      {% for r in history %}
+        <tr class="{{ 'dim' if r.resolved and r.kind == 'problem' }}">
+          <td class="tnum" style="white-space:nowrap">{{ r.created_at|dt }}</td>
+          <td>{{ event(r) }}{% if r.kind == 'problem' and r.resolved %}<div class="sub">закрыто {{ r.resolved_at|dt }}</div>{% endif %}</td>
+          <td>{{ who(r) }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table></div>
+    {% else %}<p class="empty">По этому устройству ещё не было сообщений.</p>{% endif %}
+  </section>
+  <div class="stack">
+    <section class="panel">
+      <h2 style="margin-bottom:12px">Обслуживание</h2>
+      {% if open_count %}
+      <form method="post" action="{{ url_for('lab.resolve', code=dev.code) }}" class="form">
+        {{ csrf() }}
+        <p class="sub" style="margin:0">Закроет {{ open_count }} {{ open_count|plural('открытую жалобу,открытые жалобы,открытых жалоб') }} и добавит запись в историю.</p>
+        <div class="field"><label for="f-note">Что сделано</label><textarea id="f-note" name="note" maxlength="300" placeholder="Например: заменена мышь, инв. № М-044"></textarea></div>
+        <button class="btn ok" type="submit">Отметить исправленным</button>
+      </form>
+      {% else %}<p class="sub" style="margin:0">Открытых жалоб нет.</p>{% endif %}
+    </section>
+    <section class="panel">
+      <h2 style="margin-bottom:12px">Данные устройства</h2>
+      <form method="post" action="{{ url_for('lab.edit_device', code=dev.code) }}" class="form">
+        {{ csrf() }}
+        <div class="field"><label for="f-name">Название</label><input id="f-name" name="name" value="{{ dev.name }}" maxlength="40" required></div>
+        <div class="field"><label for="f-inv">Инвентарный номер</label><input id="f-inv" name="inventory_no" value="{{ dev.inventory_no }}" maxlength="32" required></div>
+        <div class="field"><label for="f-place">Место в классе</label><input id="f-place" name="place" value="{{ dev.place }}" maxlength="60"></div>
+        <label class="check"><input type="checkbox" name="is_active" {% if dev.is_active %}checked{% endif %}> Устройство используется (снимите, если списано)</label>
+        <button class="btn" type="submit">Сохранить</button>
+      </form>
+      <p style="margin:12px 0 0;display:flex;gap:8px;flex-wrap:wrap">
+        <a class="btn small" href="{{ url_for('lab.stickers', only=dev.code) }}">Наклейка</a>
+        <a class="btn small" href="{{ url_for('student.device', code=dev.code) }}">Экран студента</a>
+      </p>
+    </section>
+  </div>
+</div>
+{% endblock %}

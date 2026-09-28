@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf, field with context %}
+{% block title %}Регистрация{% endblock %}
+{% block content %}
+<div class="auth">
+  <h1>Регистрация студента</h1>
+  <p class="muted" style="margin:0 0 16px">Код регистрации сообщает преподаватель или лаборант. Он также есть на плакате в аудитории.</p>
+  <div class="panel">
+    <form method="post" class="form" novalidate>
+      {{ csrf() }}
+      {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+      {{ field('invite', 'Код регистрации', errors, form.invite, autocomplete='off', placeholder='Код от лаборанта') }}
+      {{ field('full_name', 'Фамилия и имя', errors, form.full_name, autocomplete='name', placeholder='Иванов Пётр') }}
+      {{ field('study_group', 'Учебная группа', errors, form.study_group, placeholder='ИС-21') }}
+      {{ field('username', 'Логин', errors, form.username, autocomplete='username', placeholder='ivanov.p') }}
+      {{ field('password', 'Пароль, не короче 8 символов', errors, type='password', autocomplete='new-password') }}
+      {{ field('password2', 'Пароль ещё раз', errors, type='password', autocomplete='new-password') }}
+      <button class="btn primary" type="submit" style="padding:12px">Зарегистрироваться</button>
+    </form>
+  </div>
+  <p class="auth-foot">Уже есть учётная запись? <a href="{{ url_for('auth.login', next=next) }}">Войти</a></p>
+</div>
+{% endblock %}

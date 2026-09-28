@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}LabTrack{% endblock %} · LabTrack</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/labtrack.css') }}">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%2315202b'/%3E%3Crect x='4' y='4' width='8' height='8' fill='none' stroke='%23fff' stroke-width='2'/%3E%3C/svg%3E">
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="{{ url_for('index') }}"><span class="brand-mark"><i></i></span>LabTrack <small>Ауд. {{ room_number }}</small></a>
+    {% if current_user %}
+    <nav class="tabs" aria-label="Разделы">
+      {% set ep = request.endpoint or '' %}
+      {% if current_user.role == 'lab' %}
+        <a href="{{ url_for('lab.dashboard') }}" {% if ep in ('lab.dashboard','lab.device') %}aria-current="page"{% endif %}>Дашборд</a>
+        <a href="{{ url_for('lab.devices') }}" {% if ep == 'lab.devices' %}aria-current="page"{% endif %}>Устройства</a>
+        <a href="{{ url_for('lab.stickers') }}" {% if ep == 'lab.stickers' %}aria-current="page"{% endif %}>QR-наклейки</a>
+        <a href="{{ url_for('lab.users') }}" {% if ep == 'lab.users' %}aria-current="page"{% endif %}>Пользователи</a>
+      {% else %}
+        <a href="{{ url_for('student.home') }}" {% if ep == 'student.home' %}aria-current="page"{% endif %}>Мои сообщения</a>
+      {% endif %}
+      <span class="who">
+        <a href="{{ url_for('auth.change_password') }}" title="Сменить пароль">{{ current_user.full_name }}</a>
+        <form method="post" action="{{ url_for('auth.logout') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="linkbtn" type="submit">Выйти</button></form>
+      </span>
+    </nav>
+    {% endif %}
+  </header>
+  {% for cat, msg in get_flashed_messages(with_categories=true) %}
+    <div class="flash {{ cat if cat in ('ok','error') else 'ok' }}" role="status">{{ msg }}</div>
+  {% endfor %}
+  <main>{% block content %}{% endblock %}</main>
+</div>
+{% block scripts %}{% endblock %}
+</body>
+</html>

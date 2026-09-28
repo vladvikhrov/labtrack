@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf with context %}
+{% block title %}QR-наклейки{% endblock %}
+{% block content %}
+<section class="panel no-print" style="margin-bottom:16px">
+  <div class="panel-head"><h2>Лист наклеек</h2><span class="sub">{{ items|length }} {{ items|length|plural('наклейка,наклейки,наклеек') }} · 62×36 мм при печати</span></div>
+  <form method="post" class="qr-settings">
+    {{ csrf() }}
+    <div class="field"><label for="f-base">Адрес сайта (в QR-код добавляется /d/код-устройства)</label><input type="url" id="f-base" name="base_url" value="{{ base }}" required></div>
+    <button class="btn" type="submit">Сохранить адрес</button>
+    <button class="btn primary" type="button" onclick="window.print()">Печать</button>
+  </form>
+  <p class="sub" style="margin:0">Перед печатью отсканируйте 2–3 кода телефоном. {% if request.args.get('only') %}<a href="{{ url_for('lab.stickers') }}">Показать все наклейки</a>{% endif %}</p>
+</section>
+<div class="sheet">
+  {% for d in items %}
+  <div class="sticker">
+    <div class="qr">{{ d.svg|safe }}</div>
+    <div>
+      <div class="s-brand">LabTrack · ауд. {{ room_number }}</div>
+      <div class="s-id">{{ d.name }}</div>
+      <div class="s-hint">Что-то не работает? Отсканируйте камерой телефона</div>
+      <div class="s-inv">{{ d.inventory_no }}</div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}
