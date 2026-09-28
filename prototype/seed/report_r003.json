@@ -1,0 +1,12 @@
+{
+ "deviceId": "pc-15",
+ "kind": "problem",
+ "categories": [
+  "mouse"
+ ],
+ "comment": "Курсор дёргается",
+ "reporter": "",
+ "createdAt": "2026-09-27T07:00:00Z",
+ "resolved": false,
+ "resolvedAt": null
+}

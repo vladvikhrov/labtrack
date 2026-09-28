@@ -1,0 +1,12 @@
+{
+ "deviceId": "pc-15",
+ "kind": "problem",
+ "categories": [
+  "mouse"
+ ],
+ "comment": "Колёсико не крутится",
+ "reporter": "Иванов, ИС-21",
+ "createdAt": "2026-09-28T07:00:00Z",
+ "resolved": false,
+ "resolvedAt": null
+}

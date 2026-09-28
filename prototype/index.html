@@ -1,0 +1,416 @@
+<title>LabTrack</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+:root{
+  --bg:#eef1f4; --surface:#ffffff; --surface-2:#f6f8fa; --line:#d7dde3;
+  --ink:#15202b; --muted:#5a6876; --accent:#2c5bc4; --accent-ink:#ffffff; --accent-soft:#e3eafa;
+  --ok:#1d8753; --ok-soft:#e1f3e9; --warn:#b77905; --warn-soft:#fbf0d9; --crit:#c0392f; --crit-soft:#fbe3e1;
+  --shadow:0 1px 2px rgba(21,32,43,.06),0 4px 14px rgba(21,32,43,.05);
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  color-scheme:dark;--bg:#10161d;--surface:#18212b;--surface-2:#1d2833;--line:#2c3947;
+  --ink:#e6ecf2;--muted:#94a3b3;--accent:#7ea2ff;--accent-ink:#0d1624;--accent-soft:#1f2e4d;
+  --ok:#4cc38a;--ok-soft:#173627;--warn:#e7ad3c;--warn-soft:#3a2d12;--crit:#f07469;--crit-soft:#41201e;
+  --shadow:0 1px 2px rgba(0,0,0,.3);
+}}
+:root[data-theme="dark"]{
+  color-scheme:dark;--bg:#10161d;--surface:#18212b;--surface-2:#1d2833;--line:#2c3947;
+  --ink:#e6ecf2;--muted:#94a3b3;--accent:#7ea2ff;--accent-ink:#0d1624;--accent-soft:#1f2e4d;
+  --ok:#4cc38a;--ok-soft:#173627;--warn:#e7ad3c;--warn-soft:#3a2d12;--crit:#f07469;--crit-soft:#41201e;
+  --shadow:0 1px 2px rgba(0,0,0,.3);
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--sans);padding-inline:16px;padding-block:0 40px}
+.wrap{max-width:1120px;margin:0 auto}
+h1,h2,h3{text-wrap:balance;margin:0;line-height:1.2}
+h2{font-size:17px;font-weight:600}
+.mono{font-family:var(--mono)}
+.muted{color:var(--muted)}
+button{font:inherit;cursor:pointer}
+button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.tnum{font-variant-numeric:tabular-nums}
+
+/* top bar */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px;padding-block:14px;border-bottom:1px solid var(--line);margin-bottom:22px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:18px;letter-spacing:-.01em}
+.brand-mark{width:28px;height:28px;border-radius:6px;background:var(--ink);display:grid;place-items:center}
+.brand-mark i{display:block;width:12px;height:12px;border:3px solid var(--bg);border-radius:2px;box-shadow:6px 6px 0 -3px var(--bg)}
+.brand small{font-weight:500;color:var(--muted);font-size:13px}
+.tabs{display:flex;gap:4px;flex-wrap:wrap;margin-left:auto}
+.tabs a{padding:7px 12px;border-radius:6px;color:var(--muted);text-decoration:none;font-weight:500;font-size:14px}
+.tabs a:hover{color:var(--ink);background:var(--surface)}
+.tabs a[aria-current="page"]{background:var(--ink);color:var(--bg)}
+.banner{background:var(--warn-soft);color:var(--ink);border:1px solid var(--warn);border-radius:8px;padding:10px 14px;font-size:14px;margin-bottom:18px}
+
+/* KPI */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.kpi b{display:block;font-size:28px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.15}
+.kpi span{font-size:13px;color:var(--muted)}
+.kpi.bad b{color:var(--crit)} .kpi.good b{color:var(--ok)}
+@media (max-width:720px){.kpis{grid-template-columns:repeat(2,1fr)}}
+
+.grid-2{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:900px){.grid-2{grid-template-columns:1fr}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;box-shadow:var(--shadow)}
+.panel-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.stack{display:flex;flex-direction:column;gap:18px}
+
+/* class map */
+.room{overflow-x:auto}
+.room-inner{min-width:520px}
+.front{display:flex;gap:10px;margin-bottom:12px;align-items:stretch}
+.board{flex:1;border:1px dashed var(--line);border-radius:8px;display:grid;place-items:center;font-size:12px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+.pcs{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+.row-gap{grid-column:1/-1;height:2px}
+.dev{position:relative;border:1px solid var(--line);background:var(--surface-2);border-radius:8px;padding:8px 8px 7px 11px;text-align:left;color:var(--ink);min-height:54px;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden}
+.dev::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--ok)}
+.dev.s-problem{background:var(--warn-soft)} .dev.s-problem::before{background:var(--warn)}
+.dev.s-crit{background:var(--crit-soft)} .dev.s-crit::before{background:var(--crit)}
+.dev:hover{border-color:var(--accent)}
+.dev .id{font-family:var(--mono);font-size:12.5px;font-weight:600}
+.dev .meta{font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dev .cnt{position:absolute;top:6px;right:6px;min-width:20px;height:20px;border-radius:10px;background:var(--crit);color:#fff;font-size:11.5px;font-weight:600;display:grid;place-items:center;padding:0 5px}
+.dev.s-problem .cnt{background:var(--warn)}
+.periph{flex:0 0 150px;display:flex;flex-direction:column;gap:8px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin-top:12px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+
+/* lists */
+.attn{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.attn li{border-top:1px solid var(--line)}
+.attn li:first-child{border-top:0}
+.attn a{display:grid;grid-template-columns:auto 1fr auto;gap:4px 12px;align-items:center;padding:10px 2px;color:inherit;text-decoration:none}
+.attn a:hover .nm{color:var(--accent)}
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.pill.ok{background:var(--ok-soft);color:var(--ok)} .pill.problem{background:var(--warn-soft);color:var(--warn)} .pill.crit{background:var(--crit-soft);color:var(--crit)} .pill.svc{background:var(--accent-soft);color:var(--accent)}
+.nm{font-weight:600}
+.sub{font-size:13px;color:var(--muted)}
+.bars{display:flex;flex-direction:column;gap:9px}
+.bar{display:grid;grid-template-columns:118px 1fr 28px;gap:10px;align-items:center;font-size:13.5px}
+.bar .track{height:10px;background:var(--surface-2);border-radius:5px;overflow:hidden;border:1px solid var(--line)}
+.bar .fill{height:100%;background:var(--accent);border-radius:5px}
+.bar b{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+.feed{list-style:none;margin:0;padding:0}
+.feed li{display:grid;grid-template-columns:92px 1fr;gap:12px;padding:9px 0;border-top:1px solid var(--line);font-size:14px}
+.feed li:first-child{border-top:0}
+.feed time{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.empty{color:var(--muted);font-size:14px;padding:6px 0}
+
+/* device (lab) */
+.back{display:inline-flex;gap:6px;color:var(--muted);text-decoration:none;font-size:14px;margin-bottom:14px}
+.back:hover{color:var(--accent)}
+.dhead{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-start;justify-content:space-between;margin-bottom:18px}
+.dhead h1{font-size:26px;font-weight:700}
+.facts{display:grid;grid-template-columns:auto 1fr;gap:6px 18px;font-size:14px;margin:0}
+.facts dt{color:var(--muted)} .facts dd{margin:0}
+.btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:9px 14px;font-weight:600;font-size:14px}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.ok{background:var(--ok);border-color:var(--ok);color:#fff}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.hist{width:100%;border-collapse:collapse;font-size:14px}
+.hist th{text-align:left;font-weight:500;color:var(--muted);font-size:12.5px;padding:0 10px 8px 0;border-bottom:1px solid var(--line)}
+.hist td{padding:10px 10px 10px 0;border-bottom:1px solid var(--line);vertical-align:top}
+.hist tr.resolved td{color:var(--muted)}
+.table-scroll{overflow-x:auto}
+.fixbox{display:flex;flex-direction:column;gap:10px}
+textarea,input[type=text],input[type=url]{width:100%;font:inherit;color:var(--ink);background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:9px 11px}
+textarea{min-height:70px;resize:vertical}
+label.lbl{font-size:13px;font-weight:500;color:var(--muted);display:block;margin-bottom:5px}
+
+/* student page */
+.student{max-width:440px;margin:0 auto}
+.phone{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:22px 20px;box-shadow:var(--shadow)}
+.tag{font-family:var(--mono);font-size:12px;color:var(--muted);letter-spacing:.04em}
+.student h1{font-size:28px;margin:4px 0 6px}
+.state-line{display:flex;align-items:center;gap:8px;font-size:14px;margin-bottom:20px}
+.big{display:flex;flex-direction:column;gap:10px}
+.big button{padding:16px;border-radius:12px;font-size:17px;font-weight:600;border:2px solid transparent;text-align:left;display:flex;align-items:center;gap:12px}
+.big .yes{background:var(--ok-soft);color:var(--ok);border-color:var(--ok)}
+.big .no{background:var(--crit-soft);color:var(--crit);border-color:var(--crit)}
+.big .dot{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:15px;flex:none}
+.yes .dot{background:var(--ok)} .no .dot{background:var(--crit)}
+.chips{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:6px 0 16px}
+.chip{border:1.5px solid var(--line);background:var(--surface-2);color:var(--ink);border-radius:10px;padding:12px 10px;font-weight:500;font-size:15px;text-align:left}
+.chip[data-k="other"]{grid-column:1/-1}
+.chip[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:600}
+.form-gap{display:flex;flex-direction:column;gap:14px}
+.done{text-align:center;padding:18px 4px}
+.done .ring{width:62px;height:62px;border-radius:50%;margin:0 auto 12px;display:grid;place-items:center;font-size:28px;color:#fff;background:var(--ok)}
+.err{color:var(--crit);font-size:14px}
+.demo-note{font-size:12.5px;color:var(--muted);text-align:center;margin-top:14px}
+.picker{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px;font-size:14px}
+select{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:7px 10px}
+
+/* stickers */
+.sheet{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.sticker{background:#fff;color:#111;border:1px dashed #9aa6b2;border-radius:10px;padding:12px;display:grid;grid-template-columns:96px 1fr;gap:12px;align-items:center}
+.sticker .qr{width:96px;height:96px}
+.sticker .qr img,.sticker .qr canvas{width:96px!important;height:96px!important;image-rendering:pixelated}
+.sticker .s-brand{font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#2c5bc4}
+.sticker .s-id{font-family:var(--mono);font-size:20px;font-weight:600;line-height:1.2}
+.sticker .s-hint{font-size:11.5px;line-height:1.35;margin-top:4px}
+.sticker .s-inv{font-family:var(--mono);font-size:10.5px;color:#555;margin-top:6px}
+.qr-settings{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end;margin-bottom:16px}
+@media (max-width:560px){.qr-settings{grid-template-columns:1fr}}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:8px;font-size:14px;z-index:20}
+@media (prefers-reduced-motion:no-preference){.dev,.chip,.btn{transition:border-color .15s,background .15s}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><span class="brand-mark"><i></i></span>LabTrack <small>Ауд. 214 · компьютерный класс</small></div>
+    <nav class="tabs" id="tabs">
+      <a href="#dashboard" data-r="dashboard">Дашборд</a>
+      <a href="#pc-15" data-r="student">Экран студента</a>
+      <a href="#stickers" data-r="stickers">QR-наклейки</a>
+    </nav>
+  </header>
+  <div id="banner" class="banner" hidden></div>
+  <main id="app"><p class="muted">Загрузка данных класса…</p></main>
+</div>
+<div id="toast" class="toast" hidden role="status"></div>
+
+<script>
+(function(){
+"use strict";
+// ---------- справочники ----------
+const TYPES = {
+  pc:        {label:"Компьютер", cats:[["mouse","Мышь"],["keyboard","Клавиатура"],["monitor","Монитор"],["software","ПО / программы"],["system","Не включается"],["network","Нет интернета"]]},
+  printer:   {label:"Принтер",   cats:[["noprint","Не печатает"],["jam","Замятие бумаги"],["paper","Нет бумаги"],["toner","Картридж / тонер"]]},
+  projector: {label:"Проектор",  cats:[["image","Нет изображения"],["remote","Пульт"],["cable","Кабель / HDMI"],["lamp","Тусклая картинка"]]}
+};
+const CAT_LABEL = {}; Object.values(TYPES).forEach(t=>t.cats.forEach(([k,v])=>CAT_LABEL[k]=v));
+CAT_LABEL.other="Другое";
+
+// ---------- состояние ----------
+let devices = [];   // {id,type,name,place,inv}
+let reports = [];   // {_id,deviceId,kind,categories,comment,reporter,createdAt,resolved,resolvedAt}
+let settings = {baseUrl:""};
+let db = null, demo = false, loaded = {d:false,r:false};
+const $app = document.getElementById("app");
+
+// ---------- утилиты ----------
+const esc = s => String(s ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmtDT = iso => { try{ return new Intl.DateTimeFormat("ru-RU",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}).format(new Date(iso)); }catch(e){ return iso; } };
+function ago(iso){ const m=Math.round((Date.now()-new Date(iso))/60000); if(m<1)return"только что"; if(m<60)return m+" мин назад"; const h=Math.round(m/60); if(h<24)return h+" ч назад"; const d=Math.round(h/24); return d+" дн назад"; }
+function plural(n,a,b,c){ const m10=n%10,m100=n%100; if(m10===1&&m100!==11)return a; if(m10>=2&&m10<=4&&(m100<10||m100>=20))return b; return c; }
+function toast(t){ const el=document.getElementById("toast"); el.textContent=t; el.hidden=false; clearTimeout(toast._t); toast._t=setTimeout(()=>el.hidden=true,2600); }
+const devById = id => devices.find(d=>d.id===id);
+const openOf = id => reports.filter(r=>r.deviceId===id && r.kind==="problem" && !r.resolved);
+function statusOf(id){ const n=openOf(id).length; return n===0?"ok":(n>=3?"crit":"problem"); }
+const STATUS_TXT = {ok:"Исправно",problem:"Есть жалобы",crit:"Требует ремонта"};
+function catSummary(list){ const c={}; list.forEach(r=>(r.categories||[]).forEach(k=>c[k]=(c[k]||0)+1)); return Object.entries(c).sort((a,b)=>b[1]-a[1]); }
+function sortDevices(a,b){ const o={pc:0,printer:1,projector:2}; return (o[a.type]-o[b.type]) || (a.num||0)-(b.num||0) || a.id.localeCompare(b.id); }
+
+// ---------- демо-режим (если общая база недоступна) ----------
+function demoData(){
+  const ds=[];
+  for(let i=1;i<=30;i++) ds.push({id:"pc-"+i,type:"pc",num:i,name:"ПК-"+i,place:"Ряд "+Math.ceil(i/6)+", место "+(((i-1)%6)+1),inv:"ИНВ-214-"+String(i).padStart(3,"0")});
+  ds.push({id:"printer-1",type:"printer",num:1,name:"Принтер-1",place:"У окна",inv:"ИНВ-214-101"},{id:"printer-2",type:"printer",num:2,name:"Принтер-2",place:"У двери",inv:"ИНВ-214-102"},{id:"projector-1",type:"projector",num:1,name:"Проектор",place:"Потолок, у доски",inv:"ИНВ-214-201"});
+  const h=x=>new Date(Date.now()-x*3600e3).toISOString(); let n=0;
+  const rs=[["pc-15","problem",["mouse"],"Колёсико не крутится","Иванов, ИС-21",2],["pc-15","problem",["mouse"],"","Петрова, ИС-22",5],["pc-15","problem",["mouse"],"Курсор дёргается","",26],
+    ["pc-7","problem",["monitor"],"Мерцает экран","Сидоров, ИС-21",8],["printer-1","problem",["jam"],"","",3],["pc-22","problem",["software","network"],"Не открывается браузер","Ким, ПИ-23",30],
+    ["pc-3","ok",[],"","",1],["pc-4","ok",[],"","",1],["projector-1","ok",[],"","",4],["pc-11","service",[],"Заменена клавиатура","Лаборант",50],["pc-11","problem",["keyboard"],"Залипает пробел","",72]];
+  const out=rs.map(([d,k,c,cm,who,hh])=>({_id:"demo"+(n++),deviceId:d,kind:k,categories:c,comment:cm,reporter:who,createdAt:h(hh),resolved:d==="pc-11"&&k==="problem",resolvedAt:d==="pc-11"&&k==="problem"?h(50):null}));
+  return {ds,rs:out};
+}
+
+// ---------- запись ----------
+async function addReport(r){
+  const body = Object.assign({resolved:false,resolvedAt:null,comment:"",reporter:"",categories:[]},r,{createdAt:new Date().toISOString()});
+  if(demo){ reports.unshift(Object.assign({_id:"local"+Date.now()},body)); render(); return; }
+  await db.collection("reports").add(body);
+}
+async function resolveDevice(id, comment){
+  const open = openOf(id); const now=new Date().toISOString();
+  if(demo){ open.forEach(r=>{r.resolved=true;r.resolvedAt=now;}); }
+  else { for(const r of open){ await db.doc("reports/"+r._id).update({resolved:true,resolvedAt:now}); } }
+  await addReport({deviceId:id,kind:"service",comment:comment||"Неисправность устранена",reporter:"Лаборант"});
+}
+
+// ---------- маршрутизация ----------
+function route(){
+  const h=(location.hash||"").replace(/^#/,"");
+  if(!h||h==="dashboard") return {v:"dashboard"};
+  if(h==="stickers") return {v:"stickers"};
+  if(h.startsWith("admin-")) return {v:"device",id:h.slice(6)};
+  return {v:"student",id:h};
+}
+function render(){
+  const r=route();
+  document.querySelectorAll("#tabs a").forEach(a=>{ const on=(a.dataset.r===r.v)||(r.v==="device"&&a.dataset.r==="dashboard"); on?a.setAttribute("aria-current","page"):a.removeAttribute("aria-current"); });
+  if(!(loaded.d&&loaded.r)) return;
+  if(!devices.length){ $app.innerHTML='<div class="panel"><h2>Устройства ещё не добавлены</h2><p class="muted">Заполните коллекцию <span class="mono">devices</span> по инструкции из README.</p></div>'; return; }
+  const keep = snapshotForm();
+  if(r.v==="dashboard") renderDashboard();
+  else if(r.v==="stickers") renderStickers();
+  else if(r.v==="device") renderDevice(r.id);
+  else renderStudent(r.id);
+  restoreForm(keep);
+}
+// сохранение полей формы при перерисовке от живых обновлений
+function snapshotForm(){ const o={}; $app.querySelectorAll("input[id],textarea[id]").forEach(el=>o[el.id]=el.value); const a=document.activeElement; return {o,focus:a&&a.id}; }
+function restoreForm(k){ Object.entries(k.o).forEach(([id,v])=>{const el=document.getElementById(id); if(el&&!el.dataset.fresh) el.value=v;}); if(k.focus){const el=document.getElementById(k.focus); if(el) el.focus();} }
+
+// ---------- дашборд ----------
+function devTile(d){
+  const s=statusOf(d.id), n=openOf(d.id).length, top=catSummary(openOf(d.id))[0];
+  const meta = n? (CAT_LABEL[top?.[0]]||"жалоба") : (d.type==="pc"?STATUS_TXT.ok:TYPES[d.type].label);
+  return `<a class="dev s-${s}" href="#admin-${esc(d.id)}" title="${esc(d.name)}: ${STATUS_TXT[s]}" style="text-decoration:none">
+    <span class="id">${esc(d.name)}</span><span class="meta">${esc(meta)}</span>${n?`<span class="cnt">${n}</span>`:""}</a>`;
+}
+function renderDashboard(){
+  const pcs=devices.filter(d=>d.type==="pc").sort(sortDevices), other=devices.filter(d=>d.type!=="pc").sort(sortDevices);
+  const openAll=reports.filter(r=>r.kind==="problem"&&!r.resolved);
+  const bad=devices.filter(d=>statusOf(d.id)!=="ok");
+  const week=reports.filter(r=>r.kind!=="service"&&Date.now()-new Date(r.createdAt)<7*864e5).length;
+  const attn=bad.map(d=>({d,list:openOf(d.id)})).sort((a,b)=>b.list.length-a.list.length);
+  const cats=catSummary(openAll); const max=cats[0]?.[1]||1;
+  let rowsHtml=""; pcs.forEach((d,i)=>{ rowsHtml+=devTile(d); });
+  $app.innerHTML=`
+  <section class="kpis">
+    <div class="kpi good"><b>${devices.length-bad.length}<span class="muted" style="font-size:16px"> / ${devices.length}</span></b><span>устройств исправно</span></div>
+    <div class="kpi ${bad.length?"bad":""}"><b>${bad.length}</b><span>${plural(bad.length,"устройство","устройства","устройств")} с жалобами</span></div>
+    <div class="kpi ${openAll.length?"bad":""}"><b>${openAll.length}</b><span>открытых ${plural(openAll.length,"жалоба","жалобы","жалоб")}</span></div>
+    <div class="kpi"><b>${week}</b><span>сообщений за 7 дней</span></div>
+  </section>
+  <div class="grid-2">
+    <section class="panel">
+      <div class="panel-head"><h2>Карта класса</h2><span class="sub">Нажмите на устройство, чтобы открыть историю</span></div>
+      <div class="room"><div class="room-inner">
+        <div class="front"><div class="board">Доска · преподаватель</div><div class="periph">${other.map(devTile).join("")}</div></div>
+        <div class="pcs">${rowsHtml}</div>
+      </div></div>
+      <div class="legend"><span><i style="background:var(--ok)"></i>исправно</span><span><i style="background:var(--warn)"></i>1–2 жалобы</span><span><i style="background:var(--crit)"></i>3 и более — нужен ремонт</span></div>
+    </section>
+    <div class="stack">
+      <section class="panel">
+        <div class="panel-head"><h2>Требуют внимания</h2><span class="sub tnum">${attn.length}</span></div>
+        ${attn.length?`<ul class="attn">${attn.map(({d,list})=>{const s=statusOf(d.id);const c=catSummary(list).map(([k,v])=>`${CAT_LABEL[k]||k} ×${v}`).join(", ");
+          return `<li><a href="#admin-${esc(d.id)}"><span class="pill ${s}">${list.length}</span><span><span class="nm">${esc(d.name)}</span> <span class="sub">— ${list.length} ${plural(list.length,"жалоба","жалобы","жалоб")}: ${esc(c.toLowerCase()||"без категории")}</span></span><span class="sub">${ago(list[0].createdAt)}</span></a></li>`}).join("")}</ul>`:`<p class="empty">Жалоб нет — всё оборудование исправно.</p>`}
+      </section>
+      <section class="panel">
+        <div class="panel-head"><h2>Открытые жалобы по типу</h2></div>
+        ${cats.length?`<div class="bars">${cats.map(([k,v])=>`<div class="bar"><span>${esc(CAT_LABEL[k]||k)}</span><span class="track"><span class="fill" style="display:block;width:${Math.max(6,v/max*100)}%"></span></span><b>${v}</b></div>`).join("")}</div>`:`<p class="empty">Нет открытых жалоб.</p>`}
+      </section>
+    </div>
+  </div>
+  <section class="panel" style="margin-top:18px">
+    <div class="panel-head"><h2>Журнал сообщений</h2><span class="sub">последние 12</span></div>
+    ${feedHtml(reports.slice(0,12),true)}
+  </section>`;
+}
+function feedHtml(list,withDev){
+  if(!list.length) return `<p class="empty">Сообщений пока нет.</p>`;
+  return `<ul class="feed">${list.map(r=>{const d=devById(r.deviceId);
+    const what = r.kind==="ok"?`<span class="pill ok">Всё работает</span>`:r.kind==="service"?`<span class="pill svc">Обслуживание</span> ${esc(r.comment)}`:`<span class="pill ${r.resolved?"svc":"problem"}">${r.resolved?"Устранено":"Проблема"}</span> ${esc((r.categories||[]).map(k=>CAT_LABEL[k]||k).join(", "))}${r.comment?` — «${esc(r.comment)}»`:""}`;
+    return `<li><time datetime="${esc(r.createdAt)}">${fmtDT(r.createdAt)}</time><span>${withDev&&d?`<a href="#admin-${esc(d.id)}" class="nm" style="color:inherit">${esc(d.name)}</a> · `:""}${what}${r.reporter&&r.kind!=="service"?` <span class="sub">· ${esc(r.reporter)}</span>`:""}</span></li>`}).join("")}</ul>`;
+}
+
+// ---------- карточка устройства (лаборант) ----------
+function renderDevice(id){
+  const d=devById(id); if(!d){ $app.innerHTML=`<a class="back" href="#dashboard">← К дашборду</a><div class="panel">Устройство <span class="mono">${esc(id)}</span> не найдено.</div>`; return; }
+  const s=statusOf(id), open=openOf(id), hist=reports.filter(r=>r.deviceId===id);
+  const lastOk=hist.find(r=>r.kind==="ok"), lastSvc=hist.find(r=>r.kind==="service");
+  $app.innerHTML=`<a class="back" href="#dashboard">← К дашборду</a>
+  <div class="dhead">
+    <div><div class="tag">${esc(TYPES[d.type].label.toUpperCase())} · ${esc(d.inv||"")}</div><h1>${esc(d.name)}</h1><div style="margin-top:6px"><span class="pill ${s}">${STATUS_TXT[s]}</span></div></div>
+    <dl class="facts"><dt>Место</dt><dd>${esc(d.place||"—")}</dd><dt>Открытых жалоб</dt><dd class="tnum">${open.length}</dd><dt>Последнее «всё работает»</dt><dd>${lastOk?ago(lastOk.createdAt):"—"}</dd><dt>Последнее обслуживание</dt><dd>${lastSvc?fmtDT(lastSvc.createdAt):"—"}</dd></dl>
+  </div>
+  <div class="grid-2">
+    <section class="panel"><div class="panel-head"><h2>История устройства</h2><span class="sub">${hist.length} ${plural(hist.length,"запись","записи","записей")}</span></div>
+      ${hist.length?`<div class="table-scroll"><table class="hist"><thead><tr><th>Когда</th><th>Событие</th><th>Кто сообщил</th></tr></thead><tbody>${hist.map(r=>`<tr class="${r.resolved?"resolved":""}"><td class="tnum" style="white-space:nowrap">${fmtDT(r.createdAt)}</td><td>${r.kind==="ok"?'<span class="pill ok">Всё работает</span>':r.kind==="service"?`<span class="pill svc">Обслуживание</span> ${esc(r.comment)}`:`<span class="pill ${r.resolved?"svc":"problem"}">${r.resolved?"Устранено":"Проблема"}</span> ${esc((r.categories||[]).map(k=>CAT_LABEL[k]||k).join(", "))}${r.comment?`<div class="sub">«${esc(r.comment)}»</div>`:""}`}</td><td>${esc(r.reporter||"аноним")}</td></tr>`).join("")}</tbody></table></div>`:`<p class="empty">По этому устройству ещё не было сообщений.</p>`}
+    </section>
+    <section class="panel fixbox"><h2>Обслуживание</h2>
+      ${open.length?`<p class="sub" style="margin:0">Закроет ${open.length} ${plural(open.length,"открытую жалобу","открытые жалобы","открытых жалоб")} и добавит запись в историю.</p>
+      <div><label class="lbl" for="fix-note">Что сделано</label><textarea id="fix-note" placeholder="Например: заменена мышь, инв. № М-044"></textarea></div>
+      <button class="btn ok" id="fix-btn">Отметить исправленным</button>`:`<p class="sub" style="margin:0">Открытых жалоб нет.</p>`}
+      <a class="btn" href="#${esc(d.id)}" style="text-decoration:none;text-align:center">Открыть экран студента для ${esc(d.name)}</a>
+    </section>
+  </div>`;
+  const b=document.getElementById("fix-btn");
+  if(b) b.onclick=async()=>{ b.disabled=true; try{ await resolveDevice(id,document.getElementById("fix-note").value.trim()); toast(d.name+": жалобы закрыты"); }catch(e){ b.disabled=false; toast("Не удалось сохранить. Проверьте доступ к базе и повторите."); } };
+}
+
+// ---------- экран студента ----------
+let stu = {id:null, step:"choose", cats:[], err:""};
+function renderStudent(id){
+  const d=devById(id);
+  if(stu.id!==id) stu={id,step:"choose",cats:[],err:""};
+  const pick=`<div class="picker"><span class="muted">Демонстрация: так выглядит страница после сканирования QR-кода</span><select id="dev-pick" aria-label="Устройство">${[...devices].sort(sortDevices).map(x=>`<option value="${esc(x.id)}" ${x.id===id?"selected":""}>${esc(x.name)}</option>`).join("")}</select></div>`;
+  if(!d){ $app.innerHTML=`<div class="student">${pick}<div class="phone"><h1>Устройство не найдено</h1><p class="muted">Код <span class="mono">${esc(id)}</span> не зарегистрирован. Сообщите лаборанту.</p></div></div>`; bindPick(); return; }
+  const s=statusOf(id), n=openOf(id).length;
+  let body="";
+  if(stu.step==="choose"){
+    body=`<div class="big"><button class="yes" id="b-ok"><span class="dot">✓</span>Всё работает</button><button class="no" id="b-no"><span class="dot">!</span>Есть проблема</button></div>`;
+  } else if(stu.step==="problem"){
+    const cats=[...TYPES[d.type].cats,["other","Другое"]];
+    body=`<div class="form-gap"><div><div class="lbl">Что не так? Можно выбрать несколько</div><div class="chips">${cats.map(([k,v])=>`<button class="chip" data-k="${k}" aria-pressed="${stu.cats.includes(k)}">${v}</button>`).join("")}</div></div>
+      <div><label class="lbl" for="s-comment">Подробнее (необязательно)</label><textarea id="s-comment" placeholder="Например: не работает левая кнопка"></textarea></div>
+      <div><label class="lbl" for="s-who">Имя и группа (необязательно)</label><input type="text" id="s-who" placeholder="Иванов, ИС-21" autocomplete="name"></div>
+      ${stu.err?`<div class="err">${esc(stu.err)}</div>`:""}
+      <button class="btn primary" id="b-send" style="padding:14px;font-size:16px">Отправить лаборанту</button><button class="btn" id="b-cancel">Назад</button></div>`;
+  } else {
+    body=`<div class="done"><div class="ring" style="${stu.step==="sent-problem"?"background:var(--accent)":""}">✓</div><h2>${stu.step==="sent-problem"?"Лаборант получил сообщение":"Спасибо за проверку"}</h2><p class="muted">${stu.step==="sent-problem"?"Проблема появится на дашборде лаборанта. Если можете — пересядьте за другой ПК.":"Отметка сохранена. Хорошего занятия!"}</p><button class="btn" id="b-again">Готово</button></div>`;
+  }
+  $app.innerHTML=`<div class="student">${pick}<div class="phone">
+    <div class="tag">LABTRACK · АУД. 214 · ${esc(d.inv||"")}</div><h1>${esc(d.name)}</h1>
+    <div class="state-line"><span class="pill ${s}">${STATUS_TXT[s]}</span><span class="muted">${n?`уже ${n} ${plural(n,"сообщение","сообщения","сообщений")} о проблеме`:esc(d.place||"")}</span></div>
+    ${body}</div><p class="demo-note">Регистрация не нужна. Отметка занимает 5 секунд.</p></div>`;
+  bindPick();
+  const on=(i,f)=>{const e=document.getElementById(i); if(e) e.onclick=f;};
+  on("b-ok",async e=>{ e.currentTarget.disabled=true; try{ await addReport({deviceId:id,kind:"ok"}); stu.step="sent-ok"; }catch(x){ stu.err="Не удалось отправить."; } render(); });
+  on("b-no",()=>{ stu.step="problem"; render(); });
+  on("b-cancel",()=>{ stu.step="choose"; stu.cats=[]; stu.err=""; render(); });
+  on("b-again",()=>{ stu.step="choose"; stu.cats=[]; render(); });
+  $app.querySelectorAll(".chip").forEach(c=>c.onclick=()=>{ const k=c.dataset.k; stu.cats=stu.cats.includes(k)?stu.cats.filter(x=>x!==k):[...stu.cats,k]; c.setAttribute("aria-pressed",stu.cats.includes(k)); });
+  on("b-send",async e=>{
+    if(!stu.cats.length){ stu.err="Выберите хотя бы один вариант."; render(); return; }
+    const btn=e.currentTarget; btn.disabled=true;
+    try{ await addReport({deviceId:id,kind:"problem",categories:stu.cats,comment:document.getElementById("s-comment").value.trim().slice(0,300),reporter:document.getElementById("s-who").value.trim().slice(0,60)}); stu.step="sent-problem"; stu.cats=[]; stu.err=""; }
+    catch(x){ stu.err="Не удалось отправить. Проверьте интернет и попробуйте ещё раз."; }
+    render();
+  });
+}
+function bindPick(){ const p=document.getElementById("dev-pick"); if(p) p.onchange=()=>{ location.hash=p.value; }; }
+
+// ---------- QR-наклейки ----------
+function renderStickers(){
+  const base=settings.baseUrl||"https://labtrack.ru/";
+  const url=id=> base.includes("#")||base.endsWith("/") ? base+(base.includes("#")?"":"#")+id : base+"#"+id;
+  $app.innerHTML=`<section class="panel" style="margin-bottom:16px">
+    <div class="panel-head"><h2>Лист наклеек</h2><span class="sub">${devices.length} ${plural(devices.length,"наклейка","наклейки","наклеек")} · размер 50×30 мм</span></div>
+    <div class="qr-settings"><div><label class="lbl" for="base-url">Адрес приложения (в QR-код добавляется #код-устройства)</label><input type="url" id="base-url" value="${esc(base)}"></div><button class="btn primary" id="save-base">Сохранить адрес</button></div>
+    <p class="sub" style="margin:0">Сделайте скриншот листа или откройте его на ноутбуке лаборанта и распечатайте из браузера. Порядок печати и наклейки — в плане внедрения.</p>
+  </section>
+  <div class="sheet">${[...devices].sort(sortDevices).map(d=>`<div class="sticker"><div class="qr" data-url="${esc(url(d.id))}"></div><div><div class="s-brand">LabTrack · ауд. 214</div><div class="s-id">${esc(d.name)}</div><div class="s-hint">Что-то не работает? Отсканируйте камерой телефона</div><div class="s-inv">${esc(d.inv||"")} · #${esc(d.id)}</div></div></div>`).join("")}</div>`;
+  $app.querySelectorAll(".qr").forEach(el=>{ if(window.QRCode){ new QRCode(el,{text:el.dataset.url,width:192,height:192,colorDark:"#000000",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.M}); } else el.textContent="QR"; });
+  document.getElementById("save-base").onclick=async()=>{ const v=document.getElementById("base-url").value.trim(); if(!/^https?:\/\//.test(v)){ toast("Адрес должен начинаться с https://"); return; }
+    settings.baseUrl=v; try{ if(!demo) await db.doc("settings/main").set({baseUrl:v}); toast("Адрес сохранён, коды обновлены"); }catch(e){ toast("Не удалось сохранить адрес"); } render(); };
+}
+
+// ---------- запуск ----------
+window.addEventListener("hashchange",()=>{ window.scrollTo(0,0); render(); });
+function startDemo(msg){
+  if(demo) return; demo=true; const {ds,rs}=demoData(); devices=ds; reports=rs; loaded={d:true,r:true};
+  const b=document.getElementById("banner"); b.textContent=msg; b.hidden=false; render();
+}
+(async function(){
+  let timer=setTimeout(()=>startDemo("Демо-режим: общая база недоступна в этом окне, изменения не сохраняются."),12000);
+  try{ db = window.claude && await window.claude.use("db"); }catch(e){ db=null; }
+  if(!db){ clearTimeout(timer); startDemo("Демо-режим: общая база недоступна в этом окне, изменения не сохраняются."); return; }
+  clearTimeout(timer);
+  const fail=e=>{ if(!loaded.d||!loaded.r) startDemo("Демо-режим: нет доступа к общей базе, изменения не сохраняются."); else { const b=document.getElementById("banner"); b.textContent="Связь с базой потеряна. Обновите страницу."; b.hidden=false; } };
+  db.collection("devices").onSnapshot(s=>{ devices=s.docs.map(x=>Object.assign({id:x.id},x.data())); loaded.d=true; render(); },fail);
+  db.collection("reports").orderBy("createdAt","desc").limit(1000).onSnapshot(s=>{ reports=s.docs.map(x=>Object.assign({_id:x.id},x.data())); loaded.r=true; render(); },fail);
+  db.doc("settings/main").onSnapshot(s=>{ if(s.exists){ settings=Object.assign({baseUrl:""},s.data()); if(route().v==="stickers") render(); } },()=>{});
+})();
+render();
+})();
+</script>

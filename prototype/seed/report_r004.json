@@ -1,0 +1,12 @@
+{
+ "deviceId": "pc-7",
+ "kind": "problem",
+ "categories": [
+  "monitor"
+ ],
+ "comment": "Мерцает экран",
+ "reporter": "Сидоров, ИС-21",
+ "createdAt": "2026-09-28T01:00:00Z",
+ "resolved": false,
+ "resolvedAt": null
+}

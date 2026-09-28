@@ -1,0 +1,12 @@
+{
+ "deviceId": "printer-1",
+ "kind": "problem",
+ "categories": [
+  "jam"
+ ],
+ "comment": "",
+ "reporter": "",
+ "createdAt": "2026-09-28T06:00:00Z",
+ "resolved": false,
+ "resolvedAt": null
+}

@@ -1,0 +1,13 @@
+{
+ "deviceId": "pc-22",
+ "kind": "problem",
+ "categories": [
+  "software",
+  "network"
+ ],
+ "comment": "Не открывается браузер",
+ "reporter": "Ким, ПИ-23",
+ "createdAt": "2026-09-27T03:00:00Z",
+ "resolved": false,
+ "resolvedAt": null
+}
